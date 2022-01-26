@@ -14,7 +14,8 @@ import {
   Pressable,
   TouchableWithoutFeedback,
   ScrollView,
-  RefreshControl
+  RefreshControl,
+  ActivityIndicator
 } from "react-native";
 
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -55,6 +56,7 @@ const FreelancerSettings = ({ navigation }) => {
   const [confPassword, setConfPassword] = useState("");
   const [validText, setValidText] = useState("");
   const [showValidation, setShowValidation] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const loadData = () => {
     fetch('http://192.168.42.241/wefixit/backend/api/users/user_fetch_self.php', {
@@ -121,7 +123,7 @@ const FreelancerSettings = ({ navigation }) => {
     // desc
 
     // console.log(portfolio);
-
+    setModalLoading(true);
     if (Object.keys(portfolio).length === 0 && portfolio.constructor === Object) {
       //ALANG PORTFOLIO UPLOAD
       let user_data = {
@@ -144,12 +146,14 @@ const FreelancerSettings = ({ navigation }) => {
         .then((response) => {
           setAlertText("Profile updated.");
           setModalAlert(true);
+          setModalLoading(false);
         })
         .catch((error) => {
           //Hide Loader
+          setModalLoading(false);
           console.log(error)
         });
-
+        setModalLoading(false);
     } else {
       //PAG MAY PORTFOLIO
       let uploadData = new FormData();
@@ -189,11 +193,14 @@ const FreelancerSettings = ({ navigation }) => {
               //Hide Loader
               console.log(error)
             });
-
+            setModalLoading(false);
         }).catch(err => {
+          setModalLoading(false);
           console.log(err)
         })
+        setModalLoading(false);
     }
+    
 
 
     // console.log("gago")
@@ -211,7 +218,7 @@ const FreelancerSettings = ({ navigation }) => {
     // console.log(result);
     if (!result.cancelled) {
       setImage(result.uri);
-
+      setModalLoading(true);
       let uploadData = new FormData();
       uploadData.append('submit', 'ok');
       uploadData.append('file', { type: 'image/jpg', uri: result.uri, name: 'uploadimagetmp.jpg' })
@@ -249,9 +256,10 @@ const FreelancerSettings = ({ navigation }) => {
               //Hide Loader
               console.log(error)
             });
-
+            setModalLoading(false);
 
         }).catch(err => {
+          setModalLoading(false);
         })
 
 
@@ -261,7 +269,6 @@ const FreelancerSettings = ({ navigation }) => {
 
   const switchRole = () => {
     // alert("gago")
-    // navigation.navigate("TalentSettings");
     fetch('http://192.168.42.241/wefixit/backend/api/users/switch_into_client.php', {
       method: 'GET',
       headers: {
@@ -279,7 +286,7 @@ const FreelancerSettings = ({ navigation }) => {
         setModalAlert(true);
 
         setTimeout(() => {
-          // navigation.navigate("LoadingScreen");
+          navigation.navigate("Login");
         }, 700)
         // setInfo(result);
         // setLoadingInfo(false);
@@ -312,7 +319,7 @@ const FreelancerSettings = ({ navigation }) => {
           old_password: oldPassword,
           new_password: newPassword
         }
-
+        setModalLoading(true);
         fetch('http://192.168.42.241/wefixit/backend/api/users/change_password.php', {
           method: 'POST',
           body: JSON.stringify(password_data),
@@ -330,6 +337,7 @@ const FreelancerSettings = ({ navigation }) => {
             if (result.message === "Wrong password") {
               setValidText("Wrong password please try again.");
               setShowValidation(true);
+              setModalLoading(false);
             } else if (result.message === "Password has been changed") {
               setModalVisible(false);
               setAlertText("Password has been changed.");
@@ -338,10 +346,13 @@ const FreelancerSettings = ({ navigation }) => {
               setOldPassword("");
               setNewPassword("");
               setConfPassword("");
+              setModalLoading(false);
             }
+            setModalLoading(false);
           })
           .catch((error) => {
             //Hide Loader
+            setModalLoading(false);
             console.log(error)
           });
 
@@ -952,6 +963,20 @@ const FreelancerSettings = ({ navigation }) => {
           </View>
         </View>
       </Modal >
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </Modal>
     </SafeAreaView >
   );
 };

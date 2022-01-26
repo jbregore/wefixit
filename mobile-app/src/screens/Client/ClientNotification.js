@@ -25,6 +25,8 @@ import { FontAwesome5 } from "@expo/vector-icons";
 
 import { useIsFocused } from "@react-navigation/native";
 
+import MyImage from "../../assets/images/login";
+
 const ClientNotification = ({ navigation }) => {
   const isFocused = useIsFocused();
 
@@ -276,7 +278,20 @@ const ClientNotification = ({ navigation }) => {
               paddingTop: 30,
             }}
           >
-            {loadingInfo ? <View></View> : <>{MyNotifComponent}</>}
+            {loadingInfo ? <View></View> : <>
+              {myNotification.length === 0 ? (<>
+                <Image
+                  source={MyImage.notif}
+                  style={{ height: 60, width: 60, }}
+                />
+
+                <Text style={{
+                  ...styles.caption, marginTop: 8,
+                  marginBottom: 20
+                }}>You don't have any notifications yet.</Text>
+              </>) : (<></>)}
+              {MyNotifComponent}
+            </>}
           </View>
         </ScrollView>
       </View>

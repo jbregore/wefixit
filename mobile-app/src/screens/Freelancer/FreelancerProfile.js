@@ -16,6 +16,7 @@ import {
   Pressable,
   Modal,
   AsyncStorage,
+  ActivityIndicator
 } from "react-native";
 
 import { Avatar } from "react-native-paper";
@@ -59,6 +60,7 @@ const FreelancerProfile = ({ navigation }) => {
   );
   const [expandView, setExpandView] = useState(false);
   const [services, setServices] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // const sampleImage2 = [
   //   "http://localhost/wefixit/backend/uploads/feedback_photos/61d953e428ce13.98408624.jpg",
@@ -395,11 +397,14 @@ const FreelancerProfile = ({ navigation }) => {
   };
 
   const viewProfile = async (profile_userid) => {
+    setModalLoading(true);
     try {
       await AsyncStorage.removeItem("id");
       await AsyncStorage.setItem("id", profile_userid);
+      setModalLoading(false);
       navigation.navigate('FreelancerViewProfile');
     } catch (error) {
+      setModalLoading(false);
       console.log(error);
     }
   };
@@ -856,7 +861,10 @@ const FreelancerProfile = ({ navigation }) => {
                   {appointmentList.length === 0 ? (
                     <NoAppointment />
                   ) : (
-                    <>{FreelancerList}</>
+                    <>
+                    <Text style={{...styles.caption, marginLeft: 7,}}>Previous Appointments:</Text>
+                    {FreelancerList}
+                    </>
                   )}
                 </>
               )}
@@ -885,6 +893,20 @@ const FreelancerProfile = ({ navigation }) => {
               source={{ uri: expandSource || sampleProfile }}
             />
           </View>
+        </View>
+      </Modal>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
       </Modal>
     </SafeAreaView>

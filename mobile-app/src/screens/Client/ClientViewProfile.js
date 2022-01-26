@@ -16,7 +16,8 @@ import {
   Pressable,
   Modal,
   AsyncStorage,
-  Linking
+  Linking,
+  ActivityIndicator
 } from "react-native";
 
 import { Avatar } from "react-native-paper";
@@ -71,6 +72,8 @@ const ClientViewProfile = ({ navigation, route }) => {
   const [expandView, setExpandView] = useState(false);
   const [modalAlert, setModalAlert] = useState(false);
   const [alertText, setAlertText] = useState("");
+
+  const [modalLoading, setModalLoading] = useState(false);
 
   // const sampleImage2 = [
   //   "http://localhost/wefixit/backend/uploads/feedback_photos/61d953e428ce13.98408624.jpg",
@@ -711,6 +714,7 @@ const ClientViewProfile = ({ navigation, route }) => {
 
   const viewProfile = async (profile_userid) => {
     try {
+      setModalLoading(true);
       fetch(
         "http://192.168.42.241/wefixit/backend/api/users/user_fetch_self.php",
         {
@@ -728,6 +732,7 @@ const ClientViewProfile = ({ navigation, route }) => {
           const result = JSON.parse(responseJson);
           if (result.user_id === profile_userid) {
             navigation.navigate("ClientProfile");
+            setModalLoading(false);
             return;
           }
         })
@@ -738,9 +743,11 @@ const ClientViewProfile = ({ navigation, route }) => {
       await AsyncStorage.removeItem("id");
       await AsyncStorage.setItem("id", profile_userid);
       //   navigation.navigate("ClientViewProfile");
+      setModalLoading(false);
       loadData();
     } catch (error) {
       console.log(error);
+      setModalLoading(false);
     }
   };
 
@@ -755,6 +762,7 @@ const ClientViewProfile = ({ navigation, route }) => {
       msg: messageText
     };
 
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/messages/send_message.php",
       {
@@ -776,9 +784,11 @@ const ClientViewProfile = ({ navigation, route }) => {
         setAlertText("Message sent.");
         setMessageText("");
         setModalMessage(false);
+        setModalLoading(false);
       })
       .catch((error) => {
         console.log(error);
+        setModalLoading(false);
       });
 
 
@@ -787,7 +797,7 @@ const ClientViewProfile = ({ navigation, route }) => {
   const viewPortfolio = async () => {
 
     Linking.openURL(info.portfolio).catch((err) => {
-      console.log(err)
+      console.log(err);
     });
 
     // try {
@@ -846,12 +856,15 @@ const ClientViewProfile = ({ navigation, route }) => {
   // const resourceType = 'http://192.168.42.213/wefixit/backend/uploads/portfolios/61da7a4043cc83.14007386.pdf';
 
   const sendMessagee = async (id) => {
+    setModalLoading(true);
     try {
       await AsyncStorage.removeItem("message_id");
       await AsyncStorage.setItem("message_id", info.user_id);
+      setModalLoading(false);
       navigation.navigate("ClientChats");
     } catch (err) {
       console.log(err);
+      setModalLoading(false);
     }
   };
 
@@ -877,7 +890,7 @@ const ClientViewProfile = ({ navigation, route }) => {
           />
         </TouchableOpacity>
         <View
-          style={{ alignItems: "flex-start", marginLeft: 90, marginTop: 5 }}
+          style={{ alignItems: "flex-start", marginLeft: 80, marginTop: 5 }}
         >
           <Text style={{ ...styles.title, color: "#fff", fontWeight: "400" }}>
             View Profile
@@ -1060,7 +1073,10 @@ const ClientViewProfile = ({ navigation, route }) => {
                   {appointmentList.length === 0 ? (
                     <NoAppointment />
                   ) : (
-                    <>{FreelancerList}</>
+                    <>
+                    <Text style={{...styles.caption, marginLeft: 7}}>Previous Appointments:</Text>
+                    {FreelancerList}
+                    </>
                   )}
                 </>
               )}
@@ -1239,6 +1255,20 @@ const ClientViewProfile = ({ navigation, route }) => {
 
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
       </Modal>
 

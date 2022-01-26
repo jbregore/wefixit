@@ -7,6 +7,7 @@ import waitlang from "./source/verification-request.gif";
 import logo from "./source/logo.png";
 import three_dots from "./source/show-more-icon.gif";
 import wefixit from "./source/wefixit.png";
+import notif from "./source/notif.jpg";
 
 export default {
     img_1,
@@ -17,5 +18,6 @@ export default {
     waitlang,
     logo,
     three_dots,
-    wefixit
+    wefixit,
+    notif
 };

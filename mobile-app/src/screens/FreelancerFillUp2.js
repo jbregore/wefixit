@@ -11,32 +11,43 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
   AsyncStorage,
+  Modal, 
+  Pressable
 } from "react-native";
 
 import MyImage from "../assets/images/freelancer";
 import * as DocumentPicker from "expo-document-picker";
 
-function FreelancerFillUp2({navigation}) {
+function FreelancerFillUp2({ navigation }) {
   const [desc, setDesc] = useState("");
   const [portfolioName, setPortfolioName] = useState("");
   const [portfolio, setPortfolio] = useState({});
   const [vportfolioName, showPortfolioName] = useState("");
 
+  const [modalAlert, setModalAlert] = useState(false);
+  const [alertText, setAlertText] = useState("");
+
   const nextScreen = () => {
-    let data = {
-      desc: desc,
-      portfolio: portfolio,
-    };
-    try {
-      AsyncStorage.removeItem("freelancer_session_2");
-      AsyncStorage.setItem(
-        "freelancer_session_2",
-        JSON.stringify(data)
-      );
-      navigation.navigate("SignUpVerification");
-    } catch (err) {
-      console.log(err);
+    if (!desc) {
+      setModalAlert(true);
+      setAlertText("Please add a description \n about yourself.")
+    } else {
+      let data = {
+        desc: desc,
+        portfolio: portfolio, 
+      };
+      try {
+        AsyncStorage.removeItem("freelancer_session_2");
+        AsyncStorage.setItem(
+          "freelancer_session_2",
+          JSON.stringify(data)
+        );
+        navigation.navigate("SignUpVerification");
+      } catch (err) {
+        console.log(err);
+      }
     }
+
   };
 
   const choosePortfolio = async () => {
@@ -143,7 +154,7 @@ function FreelancerFillUp2({navigation}) {
             numberOfLines={15}
             style={{ ...styles.input, height: 150, textAlignVertical: "top" }}
             placeholder="Ex. Hi Im Jb and i love working with my clients,
-                    i can do Web Developing, Mobile app Developing and Graphic Design."
+                    i can do tv repairs, item deliveries."
             value={desc}
             onChangeText={(desc) => setDesc(desc)}
           />
@@ -193,6 +204,67 @@ function FreelancerFillUp2({navigation}) {
         </View>
 
       </ScrollView>
+
+      {/* MODAL */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalAlert}
+        onRequestClose={() => {
+          setModalAlert(!modalAlert);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={{ ...styles.modalView, height: 120 }}>
+
+            <View style={{ flexDirection: "column", }}>
+              <Text style={{
+                paddingLeft: 5,
+                marginBottom: 5,
+                fontSize: 18,
+                color: "#555",
+                fontFamily: "sans-serif-light",
+                textAlign: 'center',
+                lineHeight: 25
+              }}>{alertText}</Text>
+
+            </View>
+
+            <View style={{
+              flexDirection: "row", position: "absolute", bottom: 10,
+              width: '100%', justifyContent: 'center', right: 0
+            }}>
+              <Pressable
+                activeOpacity={0.5}
+                style={{
+                  textAlign: "center",
+                  backgroundColor: "#14a800",
+                  width: 70,
+                  height: 30,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 30,
+                  marginBottom: 7,
+                  marginRight: 8,
+                }}
+                onPress={() => {
+                  setModalAlert(!modalAlert)
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: "#fff",
+                  }}
+                >
+                  Okay
+                </Text>
+              </Pressable>
+
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -223,6 +295,50 @@ const styles = StyleSheet.create({
     width: 200,
     marginTop: 20,
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)"
+  },
+  modalView: {
+    minHeight: 140,
+    width: 300,
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 25,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
+  }
 });
 
 export default FreelancerFillUp2;

@@ -10,16 +10,21 @@ import {
     TextInput,
     KeyboardAvoidingView,
     TouchableOpacity,
-    AsyncStorage
+    AsyncStorage,
+    Modal,
+    Pressable
 } from "react-native";
 
 import MyImage from "../assets/images/freelancer";
 
-function FreelancerFillUp1({navigation}) {
+function FreelancerFillUp1({ navigation }) {
 
     const [myService, setMyService] = useState([]);
     const [service, setService] = useState("");
     const [rate, setRate] = useState("");
+
+    const [modalAlert, setModalAlert] = useState(false);
+    const [alertText, setAlertText] = useState("");
 
     const addService = () => {
         if (!service) {
@@ -38,20 +43,29 @@ function FreelancerFillUp1({navigation}) {
     };
 
     const nextScreen = () => {
-        let data = {
-            service: myService,
-            rate: rate
+        if (myService.length === 0 || !rate) {
+            setAlertText("Please fill all the fields.");
+            setModalAlert(true);
+        } else {
+            // alert("Yeheys")
+            let data = {
+                service: myService,
+                rate: rate
+            }
+            try {
+                AsyncStorage.removeItem("freelancer_session");
+                AsyncStorage.setItem(
+                    "freelancer_session",
+                    JSON.stringify(data)
+                );
+                navigation.navigate("FreelancerFillUp2");
+            } catch (err) {
+                console.log(err);
+            }
         }
-        try {
-            AsyncStorage.removeItem("freelancer_session");
-            AsyncStorage.setItem(
-                "freelancer_session",
-                JSON.stringify(data)
-            );
-            navigation.navigate("FreelancerFillUp2");
-        } catch (err) {
-            console.log(err);
-        }
+
+
+
     }
 
     return (
@@ -94,8 +108,8 @@ function FreelancerFillUp1({navigation}) {
                         Please list down the services you can offer :
                     </Text>
                     <TextInput
-                        style={styles.input}
-                        placeholder="Ex. Web Developing"
+                        style={{ ...styles.input }}
+                        placeholder="Ex. Technician"
                         value={service}
                         onChangeText={(service) => setService(service)}
                     />
@@ -116,8 +130,9 @@ function FreelancerFillUp1({navigation}) {
                                 position: "relative",
                                 justifyContent: "center",
                                 width: 50,
-                                height: 28,
-                                marginTop: -18,
+                                height: 35,
+                                marginTop: -22,
+                                zIndex: 1
                             }}
                             onPress={addService}
                         >
@@ -199,6 +214,67 @@ function FreelancerFillUp1({navigation}) {
                 </View>
 
             </ScrollView>
+
+            {/* MODAL */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalAlert}
+                onRequestClose={() => {
+                    setModalAlert(!modalAlert);
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <View style={{ ...styles.modalView, height: 120 }}>
+
+                        <View style={{ flexDirection: "column", }}>
+                            <Text style={{
+                                paddingLeft: 5,
+                                marginBottom: 5,
+                                fontSize: 18,
+                                color: "#555",
+                                fontFamily: "sans-serif-light",
+                                textAlign: 'center',
+                                lineHeight: 25
+                            }}>{alertText}</Text>
+
+                        </View>
+
+                        <View style={{
+                            flexDirection: "row", position: "absolute", bottom: 10,
+                            width: '100%', justifyContent: 'center', right: 0
+                        }}>
+                            <Pressable
+                                activeOpacity={0.5}
+                                style={{
+                                    textAlign: "center",
+                                    backgroundColor: "#14a800",
+                                    width: 70,
+                                    height: 30,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderRadius: 30,
+                                    marginBottom: 7,
+                                    marginRight: 8,
+                                }}
+                                onPress={() => {
+                                    setModalAlert(!modalAlert)
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 16,
+                                        color: "#fff",
+                                    }}
+                                >
+                                    Okay
+                                </Text>
+                            </Pressable>
+
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 }
@@ -229,6 +305,51 @@ const styles = StyleSheet.create({
         width: 200,
         marginTop: 20,
     },
+
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)"
+    },
+    modalView: {
+        minHeight: 140,
+        width: 300,
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 25,
+        paddingHorizontal: 10,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    button: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2
+    },
+    buttonOpen: {
+        backgroundColor: "#F194FF",
+    },
+    buttonClose: {
+        backgroundColor: "#2196F3",
+    },
+    textStyle: {
+        color: "white",
+        fontWeight: "bold",
+        textAlign: "center"
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center"
+    }
 });
 
 export default FreelancerFillUp1;

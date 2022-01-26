@@ -14,7 +14,8 @@ import {
   Pressable,
   TouchableWithoutFeedback,
   ScrollView,
-  RefreshControl
+  RefreshControl,
+  ActivityIndicator
 } from "react-native";
 import { Avatar, } from "react-native-paper";
 
@@ -47,6 +48,7 @@ const ClientSettings = ({ navigation }) => {
   const [image, setImage] = useState(null);
   const [roleModal, setRoleModal] = useState(false);
   const isFocused = useIsFocused();
+  const [modalLoading, setModalLoading] = useState(false);
 
   const loadData = () => {
     const fetchData = () => {
@@ -96,6 +98,7 @@ const ClientSettings = ({ navigation }) => {
         setShowValidation(true);
       } else {
 
+        setModalLoading(true);
         let password_data = {
           old_password: oldPassword,
           new_password: newPassword
@@ -127,9 +130,11 @@ const ClientSettings = ({ navigation }) => {
               setNewPassword("");
               setConfPassword("");
             }
+            setModalLoading(false);
           })
           .catch((error) => {
             //Hide Loader
+            setModalLoading(false);
             console.log(error)
           });
 
@@ -157,7 +162,7 @@ const ClientSettings = ({ navigation }) => {
     // console.log(result);
     if (!result.cancelled) {
       setImage(result.uri);
-
+      setModalLoading(true);
       let uploadData = new FormData();
       uploadData.append('submit', 'ok');
       uploadData.append('file', { type: 'image/jpg', uri: result.uri, name: 'uploadimagetmp.jpg' })
@@ -190,14 +195,17 @@ const ClientSettings = ({ navigation }) => {
               // alert("Profile Updated.");
               setAlertText("Profile picture updated.");
               setModalAlert(true);
+              setModalLoading(false);
             })
             .catch((error) => {
               //Hide Loader
+              setModalLoading(false);
               console.log(error)
             });
 
 
         }).catch(err => {
+          setModalLoading(false);
         })
 
 
@@ -210,7 +218,6 @@ const ClientSettings = ({ navigation }) => {
 
   const switchRole = () => {
     // alert("gago")
-    // navigation.navigate("TalentSettings");
     fetch('http://192.168.42.241/wefixit/backend/api/users/switch_into_freelancer.php', {
       method: 'GET',
       headers: {
@@ -228,7 +235,7 @@ const ClientSettings = ({ navigation }) => {
         setModalAlert(true);
 
         setTimeout(() => {
-          // navigation.navigate("LoadingScreen");
+          navigation.navigate("Login");
         }, 700)
         // setInfo(result);
         // setLoadingInfo(false);
@@ -694,6 +701,20 @@ const ClientSettings = ({ navigation }) => {
 
 
       </View>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

@@ -24,10 +24,8 @@ import { AntDesign } from "@expo/vector-icons";
 
 import MyImage from "../assets/images/login";
 // import LoadingSpinner from "./LoadingSpinner";
-import firebase from "../config/firebase/firebase";
 import { useIsFocused } from "@react-navigation/native";
 
-const auth = firebase.auth();
 
 const Login = ({ navigation }) => {
   const isFocused = useIsFocused();
@@ -40,7 +38,6 @@ const Login = ({ navigation }) => {
   const [alertText, setAlertText] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
-
 
   const submitLog = () => {
     if (!username || !password) {
@@ -95,8 +92,6 @@ const Login = ({ navigation }) => {
   useEffect(() => {
     setTimeout(() => {
       setIsLoading(false);
-      setUsername("");
-      setPassword("");
     }, 3500);
   }, []);
 

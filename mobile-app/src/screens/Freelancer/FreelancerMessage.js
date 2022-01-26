@@ -15,7 +15,8 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
   RefreshControl,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from "react-native";
 
 import { Avatar } from "react-native-paper";
@@ -44,7 +45,7 @@ const FreelancerMessage = ({ navigation }) => {
   const [prevChat, setPrevChat] = useState("");
   const [searchList, setSearchList] = useState([]);
   const [searchView, setSearchView] = useState(false);
-
+  const [modalLoading, setModalLoading] = useState(false);
 
   const loadChatsData = () => {
     fetch("http://192.168.42.241/wefixit/backend/api/users/user_fetch_self.php", {
@@ -299,12 +300,14 @@ const FreelancerMessage = ({ navigation }) => {
 
   const viewChat = async (id) => {
     // setMyColor("#eaeaea");
-
+    setModalLoading(true);
     try {
       await AsyncStorage.removeItem("message_id");
       await AsyncStorage.setItem("message_id", id);
+      setModalLoading(false);
       navigation.navigate("FreelancerChats");
     } catch (err) {
+      setModalLoading(false);
       console.log(err);
     }
 
@@ -362,7 +365,7 @@ const FreelancerMessage = ({ navigation }) => {
     if (!newChat) {
       return;
     }
-
+    setModalLoading(true);
     fetch("http://192.168.42.241/wefixit/backend/api/users/new_chat_message.php", {
       method: "POST",
       body: JSON.stringify({ name: newChat }),
@@ -379,9 +382,11 @@ const FreelancerMessage = ({ navigation }) => {
         console.log(result);
         setSearchList(result);
         setSearchView(true);
+        setModalLoading(false);
       })
       .catch((error) => {
         //Hide Loader
+        setModalLoading(false);
         console.log(error);
       });
 
@@ -419,7 +424,7 @@ const FreelancerMessage = ({ navigation }) => {
       loadChatsData();
       return;
     }
-
+    setModalLoading(true);
     fetch("http://192.168.42.241/wefixit/backend/api/users/get_name_message.php", {
       method: "POST",
       body: JSON.stringify({ name: prevChat }),
@@ -435,11 +440,13 @@ const FreelancerMessage = ({ navigation }) => {
         const result = JSON.parse(responseJson);
         console.log(result);
         setMessageList(result);
+        setModalLoading(false);
         // setSearchList(result);
         // setSearchView(true);
       })
       .catch((error) => {
         //Hide Loader
+        setModalLoading(false);
         console.log(error);
       });
 
@@ -620,6 +627,20 @@ const FreelancerMessage = ({ navigation }) => {
         </Modal>
 
       </View>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

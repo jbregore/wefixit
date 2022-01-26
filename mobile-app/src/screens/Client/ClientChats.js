@@ -18,6 +18,7 @@ import {
   AsyncStorage,
   Picker,
   RefreshControl,
+  ActivityIndicator
 } from "react-native";
 
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -29,15 +30,9 @@ import { useIsFocused } from "@react-navigation/native";
 import { Avatar } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-import firebase from "../../config/firebase/firebase";
-
-const db = firebase.firestore();
-const auth = firebase.auth();
-const storage = firebase.storage();
 
 const ClientChats = ({ navigation }) => {
   //MY INFO
-  const currentUser = auth.currentUser;
 
   const [modalVisible, setModalVisible] = React.useState(false);
   const [myColor, setMyColor] = React.useState("#fff");
@@ -79,6 +74,7 @@ const ClientChats = ({ navigation }) => {
 
   const [modalAlert, setModalAlert] = useState(false);
   const [alertText, setAlertText] = useState("");
+  const [modalLoading, setModalLoading] = useState(false);
 
   const loadData = () => {
     async function fetchData() {
@@ -270,6 +266,7 @@ const ClientChats = ({ navigation }) => {
     if (!messageText) {
       return;
     }
+    setModalLoading(true);
     let message_data = {
       incoming_msg_id: id,
       msg: messageText
@@ -292,9 +289,11 @@ const ClientChats = ({ navigation }) => {
         //Hide Loader
         const result = JSON.parse(responseJson);
         setMessageText("");
+        setModalLoading(false);
         loadData();
       })
       .catch((error) => {
+        setModalLoading(false);
         console.log(error);
       });
 
@@ -332,7 +331,7 @@ const ClientChats = ({ navigation }) => {
       setAlertText("Please fill all the fields");
       valid = 0;
     } else if (valid === 4) {
-
+      setModalLoading(true);
       setTimeout(() => {
         let appoint_data = {
           freelancer_id: chatInfo.user_id,
@@ -374,63 +373,68 @@ const ClientChats = ({ navigation }) => {
             setModalVisible(false);
             setModalAlert(true);
             setAlertText("Appointment has been set sucessfully.");
-
+            setModalLoading(false);
           })
           .catch((error) => {
             //Hide Loader
+            setModalLoading(false);
             console.log(error);
           });
 
 
-        // let notif_data = {
-        //   notif_text: "Set an appointment with you.",
-        //   notif_from: info.user_id,
-        //   notif_to: chatInfo.user_id
-        // }
+        let notif_data = {
+          notif_text: "Set an appointment with you.",
+          notif_from: info.user_id,
+          notif_to: chatInfo.user_id
+        }
 
-        // fetch("http://192.168.42.241/wefixit/backend/api/notification/create_notification.php", {
-        //   method: "POST",
-        //   body: JSON.stringify(notif_data),
-        //   headers: {
-        //     //Header Defination
-        //     Accept: "application/json",
-        //     "Content-Type": "application/json",
-        //   },
-        // })
-        //   .then((response) => response.text())
-        //   .then((responseJson) => {
-        //     //Hide Loader
-        //     const result = JSON.parse(responseJson);
-        //   })
-        //   .catch((error) => {
-        //     //Hide Loader
-        //     console.log(error);
-        //   });
+        fetch("http://192.168.42.241/wefixit/backend/api/notification/create_notification.php", {
+          method: "POST",
+          body: JSON.stringify(notif_data),
+          headers: {
+            //Header Defination
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.text())
+          .then((responseJson) => {
+            //Hide Loader
+            const result = JSON.parse(responseJson);
+            setModalLoading(false);
+          })
+          .catch((error) => {
+            //Hide Loader
+            console.log(error);
+            setModalLoading(false);
+          });
 
-        // let notif_data2 = {
-        //   notif_text: "You set an appointment with this freelancer.",
-        //   notif_from: chatInfo.user_id, 
-        //   notif_to: info.user_id
-        // }
+        let notif_data2 = {
+          notif_text: "You set an appointment with this freelancer.",
+          notif_from: chatInfo.user_id, 
+          notif_to: info.user_id
+        }
 
-        // fetch("http://192.168.42.241/wefixit/backend/api/notification/create_notification.php", {
-        //   method: "POST",
-        //   body: JSON.stringify(notif_data2),
-        //   headers: {
-        //     //Header Defination
-        //     Accept: "application/json",
-        //     "Content-Type": "application/json",
-        //   },
-        // })
-        //   .then((response) => response.text())
-        //   .then((responseJson) => {
-        //     //Hide Loader
-        //     const result = JSON.parse(responseJson);
-        //   })
-        //   .catch((error) => {
-        //     //Hide Loader
-        //     console.log(error);
-        //   });
+        fetch("http://192.168.42.241/wefixit/backend/api/notification/create_notification.php", {
+          method: "POST",
+          body: JSON.stringify(notif_data2),
+          headers: {
+            //Header Defination
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.text())
+          .then((responseJson) => {
+            //Hide Loader
+            const result = JSON.parse(responseJson);
+            setModalLoading(false);
+          })
+          .catch((error) => {
+            //Hide Loader
+            setModalLoading(false);
+            console.log(error);
+          });
 
 
       }, 300)
@@ -1115,6 +1119,20 @@ const ClientChats = ({ navigation }) => {
 
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
       </Modal>
     </SafeAreaView>

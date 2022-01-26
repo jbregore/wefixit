@@ -801,6 +801,22 @@ class Users
         return $stmt;
     }
 
+
+    public function search_clients()
+    {
+        $record_per_page = 10;
+        $start_from = ($this->page - 1) * $record_per_page;
+
+        $query = "SELECT * FROM $this->table_name WHERE $this->filter_search 
+        LIKE '%$this->search%' AND role='client' AND user_id != '$this->user_id'
+        AND verified != '0'
+        ORDER by created_at DESC LIMIT $start_from, $record_per_page";
+        $stmt = $this->conn->query($query);
+
+        return $stmt;
+    }
+    
+
     public function search_by_service()
     {
         $query = "SELECT * FROM $this->table_name WHERE services_offer 

@@ -15,7 +15,8 @@ import {
   Dimensions,
   Pressable,
   Modal,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from "react-native";
 
 import {
@@ -66,6 +67,7 @@ const ClientProfile = ({ navigation }) => {
   // ]
 
   const [imageTest, setImageTest] = useState(0);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const imageChange = (nativeEvent) => {
     if (nativeEvent) {
@@ -352,14 +354,16 @@ const ClientProfile = ({ navigation }) => {
   }
 
   const viewProfile = async (profile_userid) => {
-
+    setModalLoading(true);
     try {
       await AsyncStorage.removeItem('id');
       await AsyncStorage.setItem('id', profile_userid);
       navigation.navigate('ClientViewProfile');
+      setModalLoading(false);
     }
     catch (error) {
-      console.log(error)
+      console.log(error);
+      setModalLoading(false);
     }
 
   }
@@ -694,7 +698,10 @@ const ClientProfile = ({ navigation }) => {
 
               {loadingFProfile ? (<View></View>) : (<>
                 {appointmentList.length === 0 ? (<NoAppointment />) :
-                  (<>{FreelancerList}</>)}
+                  (<>
+                  <Text style={{...styles.caption, marginLeft: 7}}>Previous Appointments:</Text>
+                  {FreelancerList}
+                  </>)}
               </>)}
               {/* <FreelancerList /> */}
 
@@ -702,10 +709,6 @@ const ClientProfile = ({ navigation }) => {
 
             </>
           ) : (<></>)}
-
-
-
-
 
 
 
@@ -727,6 +730,20 @@ const ClientProfile = ({ navigation }) => {
             <Image style={{ width: 320, height: "90%", resizeMode: 'contain' }}
               source={{ uri: expandSource || sampleProfile}} />
           </View>
+        </View>
+      </Modal>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
       </Modal>
 

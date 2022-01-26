@@ -805,4 +805,16 @@ class Appointments
             return "failed";
         }
     }
+
+    public function client_prev_appointments()
+    {
+        // Create query
+        $query = "SELECT COUNT(*) as total_appoint FROM $this->table_name 
+        WHERE client_id = '$this->user_id' AND c_status = 'done' AND f_status = 'done'";
+
+        //execute query
+        $stmt = $this->conn->query($query);
+
+        return $stmt;
+    }
 }

@@ -18,6 +18,7 @@ import {
   AsyncStorage,
   Picker,
   RefreshControl,
+  ActivityIndicator
 } from "react-native";
 
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -79,6 +80,8 @@ const FreelancerChats = ({ navigation }) => {
   const [modalConfirm, setModalConfirm] = useState(false);
   const [modalConfirmDeny, setModalConfirmDeny] = useState(false);
   const [loadingAppointment, setLoadingAppointment] = useState(true);
+  const [modalLoading, setModalLoading] = useState(false);
+
 
   const loadData = () => {
     async function fetchViewId() {
@@ -237,6 +240,7 @@ const FreelancerChats = ({ navigation }) => {
       msg: messageText,
     };
 
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/messages/send_message.php",
       {
@@ -257,10 +261,12 @@ const FreelancerChats = ({ navigation }) => {
         // setModalAlert(true);
         // setAlertText("Message sent.");
         setMessageText("");
+        setModalLoading(false);
         loadData();
         // setModalMessage(false);
       })
       .catch((error) => {
+        setModalLoading(false);
         console.log(error);
       });
   };
@@ -365,6 +371,7 @@ const FreelancerChats = ({ navigation }) => {
   };
 
   const acceptAppointment = () => {
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/appointments/accept_appointment.php",
       {
@@ -387,10 +394,12 @@ const FreelancerChats = ({ navigation }) => {
         setModalAlert(true);
         setModalConfirm(false);
         setAlertText("Appointment has been set successfully.");
+        setModalLoading(false);
         loadData();
       })
       .catch((error) => {
         //Hide Loader
+        setModalLoading(false);
         console.log(error);
       });
   };
@@ -398,6 +407,7 @@ const FreelancerChats = ({ navigation }) => {
   const denyAppointment = () => {
     // alert("denied");
     // setModalConfirmDeny(false);
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/appointments/deny_appointment.php",
       {
@@ -420,10 +430,12 @@ const FreelancerChats = ({ navigation }) => {
         setModalAlert(true);
         setModalConfirmDeny(false);
         setAlertText("Appointment has been denied successfully.");
+        setModalLoading(false);
         loadData();
       })
       .catch((error) => {
         //Hide Loader
+        setModalLoading(false);
         console.log(error);
       });
   };
@@ -1298,6 +1310,20 @@ const FreelancerChats = ({ navigation }) => {
               </Pressable>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
       </Modal>
     </SafeAreaView>

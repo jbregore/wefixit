@@ -14,7 +14,8 @@ import {
   Pressable,
   Picker,
   Modal,
-  RefreshControl
+  RefreshControl,
+  ActivityIndicator
 } from "react-native";
 
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -37,7 +38,7 @@ const ClientAppointments = ({ navigation }) => {
   });
 
   const sampleProfile = "https://th.bing.com/th/id/R.782adc2b6062ab00461359da5b02b753?rik=Y%2fJZM98TPsfXxA&riu=http%3a%2f%2fwww.pngall.com%2fwp-content%2fuploads%2f5%2fProfile-PNG-File.png&ehk=nJ0Yls4aiMdSvREO5hB2GU7Hc3cL04UQeojwLhvL8Gk%3d&risl=&pid=ImgRaw&r=0";
-  
+
   const [refreshing, setRefreshing] = useState(false);
   const [hiresList, setHiresList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,8 @@ const ClientAppointments = ({ navigation }) => {
   const [goFeedbackModal, setGoFeedbackModal] = useState(false);
   const [zeroData, setZeroData] = useState(false);
 
+  const [search, setSearch] = useState("");
+  const [modalLoading, setModalLoading] = useState(false);
   // const sampleImage = [
   //   "http://192.168.42.241/wefixit/backend/uploads/feedback_photos/61d953e428ce13.98408624.jpg",
   //   "http://192.168.42.241/wefixit/backend/uploads/feedback_photos/61d953e4294fe9.44851010.jpg",
@@ -92,6 +95,7 @@ const ClientAppointments = ({ navigation }) => {
         //Hide Loader
         const result = JSON.parse(responseJson);
         // setMyId(result.user_id);
+        console.log("burat")
         console.log(result);
         let data = [];
         for (let row of result) {
@@ -145,7 +149,7 @@ const ClientAppointments = ({ navigation }) => {
             })
 
 
-          
+
         }
 
         setTimeout(() => {
@@ -213,7 +217,6 @@ const ClientAppointments = ({ navigation }) => {
 
   useEffect(() => {
     setLoading(false);
-
     if (hiresList.length === 0) {
       setZeroData(true);
     }
@@ -416,7 +419,7 @@ const ClientAppointments = ({ navigation }) => {
 
   const goCancel = () => {
     // alert("Appointment has been cancelled.")
-
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/appointments/cancel_appointment.php",
       {
@@ -473,10 +476,12 @@ const ClientAppointments = ({ navigation }) => {
         else if (result2.message === "deleted") {
 
         }
+        setModalLoading(false);
       })
       .catch((error) => {
         //Hide Loader
         console.log(error);
+        setModalLoading(false);
       });
   }
 
@@ -711,7 +716,7 @@ const ClientAppointments = ({ navigation }) => {
     // console.log(sampleImage)
     // alert(comment);
     // alert(starCount);
-
+    setModalLoading(true);
     for (let row of sampleImage) {
       // console.log(row)
       let uploadData = new FormData();
@@ -758,8 +763,10 @@ const ClientAppointments = ({ navigation }) => {
     }).then(response => response.text())
       .then(responseJson => {
         const result = JSON.parse(responseJson);
+        setModalLoading(false);
       }).catch(err => {
         console.log(err);
+        setModalLoading(false);
       })
 
     let done_appoint = {
@@ -872,9 +879,13 @@ const ClientAppointments = ({ navigation }) => {
         }
 
         setGoFeedbackModal(false);
+        setModalLoading(false);
       }).catch(err => {
         console.log(err);
+        setModalLoading(false);
       })
+
+    
   }
 
   const sendFeedback = (e) => {
@@ -893,6 +904,90 @@ const ClientAppointments = ({ navigation }) => {
     setSampleImage([]);
   }
 
+  const goSearch = () => {
+    // alert(search)
+    setModalLoading(true);
+    let search_data = {
+      search: search,
+      filter: "name",
+      pagee: 1
+    }
+
+    fetch('http://192.168.42.241/wefixit/backend/api/users/search_hired_freelancer.php', {
+      method: 'POST',
+      body: JSON.stringify(search_data),
+    }).then(response => response.text())
+      .then(responseJson => {
+        const result = JSON.parse(responseJson);
+        // console.log(result);
+        // setHiresList(result);
+        let data = [];
+        for (let row of result) {
+          let freelancer_id = "";
+          let freelancer_name = "";
+          let freelancer_photo = "";
+          let freelancer_address = "";
+          let freelancer_rating = "";
+          let job_headline = "";
+          let freelancer_fname = "";
+
+          fetch(
+            "http://192.168.42.241/wefixit/backend/api/users/view_profile_id.php",
+            {
+              method: "POST",
+              body: JSON.stringify({ id: row.freelancer_id }),
+              headers: {
+                //Header Defination
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            }
+          )
+            .then((response2) => response2.text())
+            .then((responseJson2) => {
+              //Hide Loader
+              const result2 = JSON.parse(responseJson2);
+              // console.log(result2)
+              freelancer_id = result2.user_id;
+              freelancer_name = result2.name;
+              freelancer_photo = result2.profile_photo;
+              freelancer_address = result2.address;
+              freelancer_rating = result2.rating;
+              freelancer_fname = result2.fname;
+
+              setTimeout(() => {
+                data.push({
+                  ...row,
+                  freelancer_id: freelancer_id,
+                  freelancer_name: freelancer_name,
+                  freelancer_photo: freelancer_photo,
+                  freelancer_address: freelancer_address,
+                  freelancer_rating: freelancer_rating,
+                  job_headline: job_headline,
+                  freelancer_fname: freelancer_fname
+                });
+              }, 300);
+
+            }).catch((err) => {
+              console.log(err);
+            })
+
+
+        }
+
+        setTimeout(() => {
+          console.log(data);
+          setHiresList(data);
+          setModalLoading(false);
+        }, 800);
+
+      }).catch(err => {
+        console.log(err);
+        setModalLoading(false);
+      })
+
+
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -940,7 +1035,10 @@ const ClientAppointments = ({ navigation }) => {
               marginTop: 20,
             }}
           >
-            <TextInput style={styles.input} placeholder="Search" />
+            <TextInput style={styles.input} placeholder="Search"
+              value={search}
+              onChangeText={(search) => setSearch(search)}
+            />
 
             <Pressable
               activeOpacity={0.5}
@@ -957,6 +1055,7 @@ const ClientAppointments = ({ navigation }) => {
                 marginTop: -45,
                 marginRight: 5
               }}
+              onPress={goSearch}
             >
               <Text
                 style={{
@@ -986,36 +1085,36 @@ const ClientAppointments = ({ navigation }) => {
           </View>
 
           {hiresList && hiresList.length !== 0 ? (<></>) : (
-          <View
-            style={{
-              borderRadius: 5,
-              borderWidth: 1,
-              borderColor: "#c3c3c3",
-              paddingHorizontal: 10,
-              paddingVertical: 10,
-              marginBottom: 30,
-              alignItems: "center",
-            }}
-          >
-            <Image
-              style={{ width: 75, height: 75, marginTop: 10 }}
-              source={MyImage.hired}
-              resizeMode="contain"
-            />
-            <Text
-              style={{ ...styles.caption, marginTop: 10 }}
-            >You havent hired anyone yet.</Text>
+            <View
+              style={{
+                borderRadius: 5,
+                borderWidth: 1,
+                borderColor: "#c3c3c3",
+                paddingHorizontal: 10,
+                paddingVertical: 10,
+                marginBottom: 30,
+                alignItems: "center",
+              }}
+            >
+              <Image
+                style={{ width: 75, height: 75, marginTop: 10 }}
+                source={MyImage.hired}
+                resizeMode="contain"
+              />
+              <Text
+                style={{ ...styles.caption, marginTop: 10 }}
+              >You havent hired anyone yet.</Text>
 
-            <Pressable onPress={() => navigation.navigate("ClientNavigation")}>
-              <Text style={{ ...styles.title, marginTop: 10, textAlign: "center" }} >
-                <Text style={{
-                  color: "#14a800",
-                  textDecorationStyle: "solid",
-                  textDecorationLine: "underline",
-                }}>Search for freelancers</Text>
-                {" "}who can get your work done.</Text>
-            </Pressable>
-          </View>)}
+              <Pressable onPress={() => navigation.navigate("ClientNavigation")}>
+                <Text style={{ ...styles.title, marginTop: 10, textAlign: "center" }} >
+                  <Text style={{
+                    color: "#14a800",
+                    textDecorationStyle: "solid",
+                    textDecorationLine: "underline",
+                  }}>Search for freelancers</Text>
+                  {" "}who can get your work done.</Text>
+              </Pressable>
+            </View>)}
 
 
           {loading === false ? (<>{MyHiresComponent}</>) : (<></>)}
@@ -1252,6 +1351,20 @@ const ClientAppointments = ({ navigation }) => {
           </View>
         </View>
       </Modal >
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </Modal>
 
 
     </SafeAreaView >

@@ -14,7 +14,8 @@ import {
   Pressable,
   Picker,
   Modal,
-  RefreshControl
+  RefreshControl,
+  ActivityIndicator
 } from "react-native";
 
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -62,7 +63,8 @@ const FreelancerAppointment = ({ navigation }) => {
 
   const [goFeedbackModal, setGoFeedbackModal] = useState(false);
   const [zeroData, setZeroData] = useState(false);
-
+  const [modalLoading, setModalLoading] = useState(false);
+  const [search, setSearch] = useState("");
   // const sampleImage = [
   //   "http://192.168.42.241/wefixit/backend/uploads/feedback_photos/61d953e428ce13.98408624.jpg",
   //   "http://192.168.42.241/wefixit/backend/uploads/feedback_photos/61d953e4294fe9.44851010.jpg",
@@ -414,7 +416,7 @@ const FreelancerAppointment = ({ navigation }) => {
 
   const goCancel = () => {
     // alert("Appointment has been cancelled.")
-
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/appointments/fcancel_appointment.php",
       {
@@ -437,13 +439,12 @@ const FreelancerAppointment = ({ navigation }) => {
           //request has been sent to your freelancer
 
           setModalAlert(true);
-          setAlertText("Request has been sent to your client.");
+          setAlertText("Request has been sent \n to your client.");
           setCancelAppointModal(false);
           loadData();
 
-
           let notif_data = {
-            notif_text: "wants to cancel the appointment " + headlineCancel,
+            notif_text: "wants to cancel the appointment ",
             notif_from: info.user_id,
             notif_to: freelancerIdCancel
           }
@@ -461,20 +462,22 @@ const FreelancerAppointment = ({ navigation }) => {
             .then((responseJson) => {
               //Hide Loader
               const result = JSON.parse(responseJson);
+              console.log(result);
             })
             .catch((error) => {
               //Hide Loader
               console.log(error);
             });
-
+            setModalLoading(false);
         }
         //DELETED
         else if (result2.message === "deleted") {
-
+          setModalLoading(false);
         }
       })
       .catch((error) => {
         //Hide Loader
+        setModalLoading(false);
         console.log(error);
       });
   }
@@ -710,7 +713,7 @@ const FreelancerAppointment = ({ navigation }) => {
     // console.log(sampleImage)
     // alert(comment);
     // alert(starCount);
-
+    setModalLoading(true);
     let feedback_data = {
       id: appointIdDone,
       fb_to: freelancerIdDone,
@@ -746,11 +749,11 @@ const FreelancerAppointment = ({ navigation }) => {
           setComment("");
           setSampleImage([]);
           setModalAlert(true);
-          setAlertText("Request has been sent to your client.");
+          setAlertText("Request has been sent \n to your client.");
           loadData();
 
           let notif_data = {
-            notif_text: "wants to mark this appointment done " + headlineDone,
+            notif_text: "wants to mark this appointment done ",
             notif_from: info.user_id,
             notif_to: freelancerIdDone
           }
@@ -774,7 +777,7 @@ const FreelancerAppointment = ({ navigation }) => {
               console.log(error);
             });
 
-
+            setModalLoading(false);
         } else if (result.message === "success") {
 
           setFeedbackModal(false);
@@ -786,7 +789,7 @@ const FreelancerAppointment = ({ navigation }) => {
           loadData();
 
           let notif_data = {
-            notif_text: "Appointment " + headlineDone + "has been finished.",
+            notif_text: "Appointment has been finished.",
             notif_from: info.user_id,
             notif_to: freelancerIdDone
           }
@@ -811,7 +814,7 @@ const FreelancerAppointment = ({ navigation }) => {
             });
 
           let notif_data2 = {
-            notif_text: "Appointment " + headlineDone + "has been finished.",
+            notif_text: "Appointment has been finished.",
             notif_from: freelancerIdDone,
             notif_to: info.user_id
           }
@@ -835,10 +838,14 @@ const FreelancerAppointment = ({ navigation }) => {
               console.log(error);
             });
 
+            setModalLoading(false);
+
         }
 
         setGoFeedbackModal(false);
+        setModalLoading(false);
       }).catch(err => {
+        setModalLoading(false);
         console.log(err);
       })
   }
@@ -859,6 +866,86 @@ const FreelancerAppointment = ({ navigation }) => {
     setSampleImage([]);
   }
 
+  const goSearch = () => {
+    setModalLoading(true);
+    let search_data = {
+      search: search,
+      filter: "name",
+      pagee: 1
+    }
+
+    fetch('http://192.168.42.241/wefixit/backend/api/users/search_my_job.php', {
+      method: 'POST',
+      body: JSON.stringify(search_data),
+    }).then(response => response.text())
+      .then(responseJson => {
+        const result = JSON.parse(responseJson);
+        console.log(result);
+        let data = [];
+        for (let row of result) {
+          let client_id = "";
+          let client_name = "";
+          let client_photo = "";
+          let client_address = "";
+          let client_rating = "";
+          let job_headline = "";
+          let client_fname = "";
+
+          fetch(
+            "http://192.168.42.241/wefixit/backend/api/users/view_profile_id.php",
+            {
+              method: "POST",
+              body: JSON.stringify({ id: row.client_id }),
+              headers: {
+                //Header Defination
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            }
+          )
+            .then((response2) => response2.text())
+            .then((responseJson2) => {
+              //Hide Loader
+              const result2 = JSON.parse(responseJson2);
+              // console.log(result2)
+              client_id = result2.user_id;
+              client_name = result2.name;
+              client_photo = result2.profile_photo;
+              client_address = result2.address;
+              client_rating = result2.rating;
+              client_fname = result2.fname;
+
+              setTimeout(() => {
+                data.push({
+                  ...row,
+                  client_id: client_id,
+                  client_name: client_name,
+                  client_photo: client_photo,
+                  client_address: client_address,
+                  client_rating: client_rating,
+                  job_headline: job_headline,
+                  client_fname: client_fname
+                });
+              }, 300);
+
+            }).catch((err) => {
+              console.log(err);
+            })
+
+        }
+
+        setTimeout(() => {
+          console.log(data);
+          setHiresList(data);
+          setModalLoading(false);
+        }, 800);
+        setModalLoading(false);
+
+      }).catch(err => {
+        setModalLoading(false);
+        console.log(err);
+      })
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -906,7 +993,10 @@ const FreelancerAppointment = ({ navigation }) => {
               marginTop: 20,
             }}
           >
-            <TextInput style={styles.input} placeholder="Search" />
+            <TextInput style={styles.input} placeholder="Search"
+              value={search}
+              onChangeText={(search) => setSearch(search)}
+            />
             <Pressable
               activeOpacity={0.5}
               style={{
@@ -922,6 +1012,7 @@ const FreelancerAppointment = ({ navigation }) => {
                 marginTop: -45,
                 marginRight: 5
               }}
+              onPress={goSearch}
             >
               <Text
                 style={{
@@ -1160,6 +1251,20 @@ const FreelancerAppointment = ({ navigation }) => {
         </View>
       </Modal >
 
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </Modal>
 
     </SafeAreaView >
   );

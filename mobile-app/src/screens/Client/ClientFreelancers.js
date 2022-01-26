@@ -23,14 +23,11 @@ import {
 
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Feather } from "@expo/vector-icons";
-import firebase from "../../config/firebase/firebase";
 import { Avatar } from "react-native-paper";
 import * as Location from "expo-location";
 import { AntDesign } from "@expo/vector-icons";
 import StarRating from "react-native-star-rating";
 
-const db = firebase.firestore();
-const storage = firebase.storage();
 
 export default function ClientFreelancers({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -311,14 +308,31 @@ export default function ClientFreelancers({ navigation }) {
   };
 
   const sendMessage = async (id) => {
+    setModalLoading(true);
     try {
       await AsyncStorage.removeItem("message_id");
       await AsyncStorage.setItem("message_id", id);
+      setModalLoading(false);
       navigation.navigate("ClientChats");
     } catch (err) {
       console.log(err);
+      setModalLoading(false);
     }
   };
+
+  const viewProfile = async (id) => {
+    setModalLoading(true);
+    try {
+      await AsyncStorage.removeItem('id');
+      await AsyncStorage.setItem('id', id);
+      setModalLoading(false);
+      navigation.navigate('ClientViewProfile');
+    }
+    catch (error) {
+      console.log(error);
+      setModalLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -536,7 +550,7 @@ export default function ClientFreelancers({ navigation }) {
             </TouchableOpacity>
           </View>
           <View style={{ width: 200, marginLeft: 30, paddingTop: 6 }}>
-            <TouchableOpacity onPress={() => alert(profileData.user_id)}>
+            <TouchableOpacity onPress={() => viewProfile(profileData.user_id)}>
               <Text
                 style={{
                   fontSize: 18,

@@ -17,6 +17,7 @@ import {
   Modal,
   AsyncStorage,
   Linking,
+  ActivityIndicator
 } from "react-native";
 
 import { Avatar } from "react-native-paper";
@@ -73,7 +74,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
   const [expandView, setExpandView] = useState(false);
   const [modalAlert, setModalAlert] = useState(false);
   const [alertText, setAlertText] = useState("");
-
+  const [modalLoading, setModalLoading] = useState(false);
   // const sampleImage2 = [
   //   "http://localhost/wefixit/backend/uploads/feedback_photos/61d953e428ce13.98408624.jpg",
   //   "http://localhost/wefixit/backend/uploads/feedback_photos/61d953e4294fe9.44851010.jpg",
@@ -172,7 +173,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
                   //JOB POST INFO
                   fetch(
                     "http://192.168.42.241/wefixit/backend/api/jobs/fetch_edit_job.php?id=" +
-                      row.jobpost_id,
+                    row.jobpost_id,
                     {
                       method: "GET",
                       headers: {
@@ -315,7 +316,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
       //FEEDBACKS INFO
       fetch(
         "http://192.168.42.241/wefixit/backend/api/appointments/fetch_feedbacks.php?id=" +
-          row.id,
+        row.id,
         {
           method: "GET",
           headers: {
@@ -713,6 +714,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
 
   const viewProfile = async (profile_userid) => {
     try {
+      setModalLoading(true);
       fetch(
         "http://192.168.42.241/wefixit/backend/api/users/user_fetch_self.php",
         {
@@ -729,19 +731,24 @@ const FreelancerViewProfile = ({ navigation, route }) => {
           //Hide Loader
           const result = JSON.parse(responseJson);
           if (result.user_id === profile_userid) {
+            setModalLoading(false);
             navigation.navigate("FreelancerProfile");
             return;
           }
+          setModalLoading(false);
         })
         .catch((error) => {
+          setModalLoading(false);
           console.log(error);
         });
 
       await AsyncStorage.removeItem("id");
       await AsyncStorage.setItem("id", profile_userid);
+      setModalLoading(false);
       //   navigation.navigate("ClientViewProfile");
       loadData();
     } catch (error) {
+      setModalLoading(false);
       console.log(error);
     }
   };
@@ -757,6 +764,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
       msg: messageText,
     };
 
+    setModalLoading(true);
     fetch(
       "http://192.168.42.241/wefixit/backend/api/messages/send_message.php",
       {
@@ -778,9 +786,11 @@ const FreelancerViewProfile = ({ navigation, route }) => {
         setAlertText("Message sent.");
         setMessageText("");
         setModalMessage(false);
+        setModalLoading(false);
       })
       .catch((error) => {
         console.log(error);
+        setModalLoading(false);
       });
   };
 
@@ -843,6 +853,19 @@ const FreelancerViewProfile = ({ navigation, route }) => {
 
   // const resourceType = 'http://192.168.42.213/wefixit/backend/uploads/portfolios/61da7a4043cc83.14007386.pdf';
 
+  const sendMessagee = async (id) => {
+    setModalLoading(true);
+    try {
+      await AsyncStorage.removeItem("message_id");
+      await AsyncStorage.setItem("message_id", info.user_id);
+      setModalLoading(false);
+      navigation.navigate("FreelancerChats");
+    } catch (err) {
+      console.log(err);
+      setModalLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -865,7 +888,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
           />
         </TouchableOpacity>
         <View
-          style={{ alignItems: "flex-start", marginLeft: 90, marginTop: 5 }}
+          style={{ alignItems: "flex-start", marginLeft: 80, marginTop: 5 }}
         >
           <Text style={{ ...styles.title, color: "#fff", fontWeight: "400" }}>
             View Profile
@@ -950,7 +973,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
                         color="#1d4354"
                         style={{ marginTop: 6, marginRight: 3 }}
                       />
-                      <TouchableOpacity onPress={() => setModalMessage(true)}>
+                      <TouchableOpacity onPress={() => sendMessagee()}>
                         <Text
                           style={{
                             marginTop: 3,
@@ -1034,7 +1057,7 @@ const FreelancerViewProfile = ({ navigation, route }) => {
                   ) : (
                     <></>
                   )}
-                  
+
                 </View>
               </View>
 
@@ -1047,7 +1070,10 @@ const FreelancerViewProfile = ({ navigation, route }) => {
                   {appointmentList && appointmentList.length === 0 ? (
                     <NoAppointment />
                   ) : (
-                    <>{FreelancerList}</>
+                    <>
+                      <Text style={{ ...styles.caption, marginLeft: 7, marginTop: 10 }}>Previous Appointments:</Text>
+                      {FreelancerList}
+                    </>
                   )}
                 </>
               )}
@@ -1167,9 +1193,9 @@ const FreelancerViewProfile = ({ navigation, route }) => {
                   marginRight: 8,
                 }}
                 onPress={sendMessage}
-                //   setModalAlert(!modalAlert)
-                //   loadData();
-                // }}
+              //   setModalAlert(!modalAlert)
+              //   loadData();
+              // }}
               >
                 <Text
                   style={{
@@ -1250,6 +1276,21 @@ const FreelancerViewProfile = ({ navigation, route }) => {
               </Pressable>
             </View>
           </View>
+        </View>
+      </Modal>
+
+
+      {/* MODAL LOADING*/}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalLoading}
+        onRequestClose={() => {
+          setModalLoading(!modalLoading);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
       </Modal>
 

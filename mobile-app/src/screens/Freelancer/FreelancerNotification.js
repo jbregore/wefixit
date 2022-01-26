@@ -24,11 +24,13 @@ import { FontAwesome } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 
+import MyImage from "../../assets/images/login";
+
 const FreelancerNotification = ({ navigation }) => {
     const isFocused = useIsFocused();
 
     const sampleProfile = "https://th.bing.com/th/id/R.782adc2b6062ab00461359da5b02b753?rik=Y%2fJZM98TPsfXxA&riu=http%3a%2f%2fwww.pngall.com%2fwp-content%2fuploads%2f5%2fProfile-PNG-File.png&ehk=nJ0Yls4aiMdSvREO5hB2GU7Hc3cL04UQeojwLhvL8Gk%3d&risl=&pid=ImgRaw&r=0";
-    
+
     const [myNotification, setMyNotification] = useState([]);
     const [profile, setProfile] = useState([]);
     const [notifCreatedAt, setNotifCreatedAt] = useState([]);
@@ -219,10 +221,10 @@ const FreelancerNotification = ({ navigation }) => {
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         setTimeout(() => {
-          loadData();
-          setRefreshing(false)
+            loadData();
+            setRefreshing(false)
         }, 1000)
-      }, []);
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -255,11 +257,11 @@ const FreelancerNotification = ({ navigation }) => {
                 </View>
             </View>
             <View style={styles.screen}>
-                <ScrollView showsVerticalScrollIndicator={false} 
+                <ScrollView showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
-                          refreshing={refreshing}
-                          onRefresh={onRefresh}
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
                         />
                     }
                 >
@@ -277,7 +279,18 @@ const FreelancerNotification = ({ navigation }) => {
                             paddingTop: 30,
                         }}
                     >
-                        {loadingInfo ? <View></View> : <>{MyNotifComponent}</>}
+                        {loadingInfo ? <View></View> : <>
+                            {myNotification.length === 0 ? (<>
+                                <Image
+                                    source={MyImage.notif}
+                                    style={{ height: 60, width: 60, }}
+                                />
+
+                                <Text style={{...styles.caption, marginTop: 8,
+                                marginBottom: 20}}>You don't have any notifications yet.</Text>
+                            </>) : (<></>)}
+                            {MyNotifComponent}
+                        </>}
                     </View>
                 </ScrollView>
             </View>

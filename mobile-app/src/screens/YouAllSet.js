@@ -20,10 +20,6 @@ import { useIsFocused } from "@react-navigation/native";
 
 import MyImage from "../assets/images/login";
 
-import firebase from "../config/firebase/firebase";
-
-const db = firebase.firestore();
-const storage = firebase.storage();
 
 const YouAllSet = ({ navigation }) => {
   const [selected, setSelected] = React.useState(false);
@@ -199,6 +195,8 @@ const YouAllSet = ({ navigation }) => {
           });
         setModalLoading(false);
       } else if (role.role === "freelancer") {
+
+
         let userId = Date.now().toString(36) + Math.random().toString(36).substr(2);
         let user_data = {
           user_id: userId,
@@ -232,43 +230,68 @@ const YouAllSet = ({ navigation }) => {
             console.log(error)
           });
 
-        let uploadDataP = new FormData();
-        uploadDataP.append('submit', 'ok');
-        uploadDataP.append('file', { type: 'application/pdf', uri: descPortfolio.portfolio.uri, name: 'sample.pdf' })
 
-        fetch('http://192.168.42.241/wefixit/backend/api/mobile_portfolio_upload.php', {
-          method: 'POST',
-          body: uploadDataP
-        }).then(response => response.text())
-          .then(responseJson => {
-            const result = JSON.parse(responseJson);
-            // console.log(result.urlpic);
+        if (Object.keys(descPortfolio.portfolio).length === 0 && descPortfolio.portfolio.constructor === Object) {
+          let user_data2 = {
+            pay_rate: `Php${rateServices.rate} /hr`,
+            services_offer: rateServices.service,
+            self_intro: descPortfolio.desc,
+            portfolio: "",
+            user_id: userId
+          }
 
-            let user_data2 = {
-              pay_rate: `Php${rateServices.rate} /hr`,
-              services_offer: rateServices.service,
-              self_intro: descPortfolio.desc,
-              portfolio: result.urlpic,
-              user_id: userId
-            }
+          fetch('http://192.168.42.241/wefixit/backend/api/users/talent_getting_started.php', {
+            method: 'PUT',
+            body: JSON.stringify(user_data2)
+          }).then((response) => response.text())
+            .then((responseJson) => {
+              //Hide Loader
+              // const result = JSON.parse(responseJson);
+              navigation.navigate("VerificationRequest")
+            })
+            .catch((error) => {
+              //Hide Loader
+              console.log(error)
+            });
+        } else {
+          let uploadDataP = new FormData();
+          uploadDataP.append('submit', 'ok');
+          uploadDataP.append('file', { type: 'application/pdf', uri: descPortfolio.portfolio.uri, name: 'sample.pdf' })
 
-            fetch('http://192.168.42.241/wefixit/backend/api/users/talent_getting_started.php', {
-              method: 'PUT',
-              body: JSON.stringify(user_data2)
-            }).then((response) => response.text())
-              .then((responseJson) => {
-                //Hide Loader
-                // const result = JSON.parse(responseJson);
-                navigation.navigate("VerificationRequest")
-              })
-              .catch((error) => {
-                //Hide Loader
-                console.log(error)
-              });
+          fetch('http://192.168.42.241/wefixit/backend/api/mobile_portfolio_upload.php', {
+            method: 'POST',
+            body: uploadDataP
+          }).then(response => response.text())
+            .then(responseJson => {
+              const result = JSON.parse(responseJson);
+              // console.log(result.urlpic);
 
-          }).catch(err => {
-            console.log(err)
-          })
+              let user_data2 = {
+                pay_rate: `Php${rateServices.rate} /hr`,
+                services_offer: rateServices.service,
+                self_intro: descPortfolio.desc,
+                portfolio: result.urlpic,
+                user_id: userId
+              }
+
+              fetch('http://192.168.42.241/wefixit/backend/api/users/talent_getting_started.php', {
+                method: 'PUT',
+                body: JSON.stringify(user_data2)
+              }).then((response) => response.text())
+                .then((responseJson) => {
+                  //Hide Loader
+                  // const result = JSON.parse(responseJson);
+                  navigation.navigate("VerificationRequest")
+                })
+                .catch((error) => {
+                  //Hide Loader
+                  console.log(error)
+                });
+
+            }).catch(err => {
+              console.log(err)
+            })
+        }
         setModalLoading(false);
       }
 

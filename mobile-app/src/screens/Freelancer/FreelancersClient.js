@@ -14,7 +14,9 @@ import {
     Picker,
     RefreshControl,
     Pressable,
-    AsyncStorage
+    AsyncStorage,
+    ActivityIndicator,
+    Modal
 } from "react-native";
 
 
@@ -39,7 +41,7 @@ const FreelancersClient = ({ navigation }) => {
     const [freelancerCount, setFreelancerCount] = useState(0);
     const [myId, setMyId] = useState("");
     const [search, setSearch] = useState("");
-
+    const [modalLoading, setModalLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
     const [state, setState] = React.useState({
@@ -67,8 +69,36 @@ const FreelancersClient = ({ navigation }) => {
                 //Hide Loader
                 const result = JSON.parse(responseJson);
                 console.log(result)
-                setFreelancersData(result)
-                setLoadingInfo(false);
+
+                let data = [];
+                for (let row of result) {
+
+                    fetch('http://192.168.42.241/wefixit/backend/api/appointments/show_client_appointments.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ id: row.user_id }),
+                        headers: {
+                            //Header Defination
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then((response) => response.text())
+                        .then((responseJson) => {
+                            //Hide Loader
+                            const result = JSON.parse(responseJson);
+                            data.push({ ...row, appoint_count: result.total_appoint.total_appoint })
+                            // console.log()
+                        })
+                        .catch((error) => {
+                            //Hide Loader
+                            console.log(error)
+                        });
+                }
+
+                setTimeout(() => {
+                    setFreelancersData(data);
+                    setLoadingInfo(false);
+                }, 800)
             })
             .catch((error) => {
                 //Hide Loader
@@ -117,12 +147,15 @@ const FreelancersClient = ({ navigation }) => {
     }, [freelancersData])
 
     const viewProfile = async (profile_userid) => {
+        setModalLoading(true);
         try {
             await AsyncStorage.removeItem('id');
             await AsyncStorage.setItem('id', profile_userid);
+            setModalLoading(false);
             navigation.navigate('FreelancerViewProfile');
         }
         catch (error) {
+            setModalLoading(false);
             console.log(error)
         }
     }
@@ -165,8 +198,17 @@ const FreelancersClient = ({ navigation }) => {
 
 
             </View>
-            
-            <Text style={{marginLeft: 'auto'}}>3 successful appointments</Text>
+
+            {row.appoint_count == 0 ? (<>
+                <Text style={{ marginLeft: 'auto' }}>
+                    no previous appointments yet.
+                </Text>
+            </>) : (<>
+                <Text style={{ marginLeft: 'auto' }}>
+
+                    {row.appoint_count} successful appointments</Text>
+            </>)}
+
 
         </View>
     ))
@@ -179,62 +221,99 @@ const FreelancersClient = ({ navigation }) => {
         }, 1000)
     }, []);
 
+
     const sigeSearch = () => {
         // alert("tae")
         // alert(state.searches)
+        setModalLoading(true);
         let search_data = {
             search: search,
             filter: state.searches,
             pagee: 1
         }
+        setTimeout(() => {
 
-        fetch("http://192.168.42.241/wefixit/backend/api/users/search_freelancer.php", {
-            method: "POST",
-            body: JSON.stringify(search_data),
-            headers: {
-                //Header Defination
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-        })
-            .then((response) => response.text())
-            .then((responseJson) => {
-                //Hide Loader
-                const result = JSON.parse(responseJson);
-                // setMyId(result.user_id);
-                console.log(result);
-                setFreelancersData(result);
+            fetch("http://192.168.42.241/wefixit/backend/api/users/search_clients.php", {
+                method: "POST",
+                body: JSON.stringify(search_data),
+                headers: {
+                    //Header Defination
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
             })
-            .catch((error) => {
-                //Hide Loader
-                console.log(error);
-            });
+                .then((response) => response.text())
+                .then((responseJson) => {
+                    //Hide Loader
+                    const result = JSON.parse(responseJson);
+                    // setMyId(result.user_id);
+                    // console.log(result);
+                    // setFreelancersData(result);
+                    let data = [];
+                    for (let row of result) {
 
-        fetch("http://192.168.42.241/wefixit/backend/api/users/freelancer_count_search.php", {
-            method: "POST",
-            body: JSON.stringify(search_data),
-            headers: {
-                //Header Defination
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-        })
-            .then((response) => response.text())
-            .then((responseJson) => {
-                //Hide Loader
-                const result = JSON.parse(responseJson);
-                // setMyId(result.user_id);
-                console.log(result.total_freelancer_count.total_freelancer_count);
-                // setFreelancersData(result);
-                setFreelancerCount(result.total_freelancer_count.total_freelancer_count);
-            })
-            .catch((error) => {
-                //Hide Loader
-                console.log(error);
-            });
+                        fetch('http://192.168.42.241/wefixit/backend/api/appointments/show_client_appointments.php', {
+                            method: 'POST',
+                            body: JSON.stringify({ id: row.user_id }),
+                            headers: {
+                                //Header Defination
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                            .then((response) => response.text())
+                            .then((responseJson) => {
+                                //Hide Loader
+                                const result = JSON.parse(responseJson);
+                                data.push({ ...row, appoint_count: result.total_appoint.total_appoint })
+                                // console.log()
+                            })
+                            .catch((error) => {
+                                //Hide Loader
+                                console.log(error)
+                            });
+                    }
+
+                    setTimeout(() => {
+                        setFreelancersData(data);
+                        setLoadingInfo(false);
+                        setModalLoading(false);
+                    }, 800)
+                    setModalLoading(false);
+
+
+                })
+                .catch((error) => {
+                    //Hide Loader
+                    setModalLoading(false);
+                    console.log(error);
+                });
+
+            // fetch("http://192.168.42.241/wefixit/backend/api/users/freelancer_count_search.php", {
+            //     method: "POST",
+            //     body: JSON.stringify(search_data),
+            //     headers: {
+            //         //Header Defination
+            //         Accept: "application/json",
+            //         "Content-Type": "application/json",
+            //     },
+            // })
+            //     .then((response) => response.text())
+            //     .then((responseJson) => {
+            //         //Hide Loader
+            //         const result = JSON.parse(responseJson);
+            //         // setMyId(result.user_id);
+            //         console.log(result.total_freelancer_count.total_freelancer_count);
+            //         // setFreelancersData(result);
+            //         setFreelancerCount(result.total_freelancer_count.total_freelancer_count);
+            //     })
+            //     .catch((error) => {
+            //         //Hide Loader
+            //         console.log(error);
+            //     });
+        }, 500)
 
     }
-
 
     return (
         <SafeAreaView style={styles.container}>
@@ -371,6 +450,20 @@ const FreelancersClient = ({ navigation }) => {
 
                 </ScrollView>
             </View>
+
+            {/* MODAL LOADING*/}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalLoading}
+                onRequestClose={() => {
+                    setModalLoading(!modalLoading);
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <ActivityIndicator size="large" color="#0000ff" />
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -414,6 +507,13 @@ const styles = StyleSheet.create({
     caption2: {
         fontSize: 16,
         lineHeight: 22,
+    },
+
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
 });
 
